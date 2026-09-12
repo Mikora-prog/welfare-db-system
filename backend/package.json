@@ -1,0 +1,52 @@
+{
+  "name": "welfare-db-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Welfare Database Management System",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "lint": "eslint src",
+    "migrate": "node src/config/migrate.js",
+    "seed": "node src/seeds/seed.js"
+  },
+  "keywords": [
+    "welfare",
+    "database",
+    "management",
+    "system"
+  ],
+  "author": "Mikora-prog",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.10.0",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.1.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "joi": "^17.11.0",
+    "axios": "^1.6.0",
+    "uuid": "^9.0.1",
+    "express-async-errors": "^3.1.1",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pdfkit": "^0.13.0",
+    "exceljs": "^4.3.0",
+    "nodemailer": "^6.9.7",
+    "moment": "^2.29.4",
+    "lodash": "^4.17.21",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.54.0"
+  }
+}
