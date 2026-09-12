@@ -14,6 +14,8 @@ const paymentRoutes = require('./routes/payments.routes');
 const reportRoutes = require('./routes/reports.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const userRoutes = require('./routes/users.routes');
+const dependantsRoutes = require('./routes/dependants.routes');
+const dependantBenefitsRoutes = require('./routes/dependant-benefits.routes');
 
 // Initialize Express app
 const app = express();
@@ -44,6 +46,8 @@ app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/dependants', dependantsRoutes);
+app.use('/api/v1/dependant-benefits', dependantBenefitsRoutes);
 
 // 404 handler
 app.use((req, res) => {
