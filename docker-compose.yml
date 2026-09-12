@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: welfare_db
+    environment:
+      POSTGRES_DB: welfare_db
+      POSTGRES_USER: welfare_user
+      POSTGRES_PASSWORD: welfare_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - welfare_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U welfare_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: welfare_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@welfare.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - welfare_network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+
+networks:
+  welfare_network:
+    driver: bridge
