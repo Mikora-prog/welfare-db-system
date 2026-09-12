@@ -48,6 +48,48 @@ CREATE TABLE IF NOT EXISTS members (
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
+-- Dependants table
+CREATE TABLE IF NOT EXISTS dependants (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    member_id UUID NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    relationship VARCHAR(50) NOT NULL,
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    id_number VARCHAR(50),
+    phone_number VARCHAR(20),
+    email VARCHAR(255),
+    is_beneficiary BOOLEAN DEFAULT true,
+    health_status VARCHAR(100),
+    emergency_contact BOOLEAN DEFAULT false,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+    INDEX idx_member_id (member_id),
+    INDEX idx_relationship (relationship)
+);
+
+-- Dependant Benefits Tracking table
+CREATE TABLE IF NOT EXISTS dependant_benefits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    dependant_id UUID NOT NULL,
+    benefit_type VARCHAR(100) NOT NULL,
+    amount DECIMAL(10, 2),
+    benefit_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'expired')),
+    expiry_date DATE,
+    notes TEXT,
+    approved_by UUID,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (dependant_id) REFERENCES dependants(id) ON DELETE CASCADE,
+    FOREIGN KEY (approved_by) REFERENCES users(id),
+    INDEX idx_dependant_id (dependant_id),
+    INDEX idx_benefit_date (benefit_date)
+);
+
 -- Payment Types table
 CREATE TABLE IF NOT EXISTS payment_types (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -166,6 +208,8 @@ CREATE INDEX idx_members_registration_date ON members(registration_date);
 CREATE INDEX idx_payments_status ON payments(is_verified);
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_active ON users(is_active);
+CREATE INDEX idx_dependants_member ON dependants(member_id);
+CREATE INDEX idx_benefits_dependant ON dependant_benefits(dependant_id);
 
 -- Create views for reporting
 
@@ -182,9 +226,11 @@ SELECT
     COUNT(p.id) as total_payments,
     COALESCE(SUM(p.amount), 0) as total_paid,
     MAX(p.payment_date) as last_payment_date,
-    m.registration_date
+    m.registration_date,
+    COUNT(DISTINCT d.id) as total_dependants
 FROM members m
 LEFT JOIN payments p ON m.id = p.member_id AND p.is_verified = true
+LEFT JOIN dependants d ON m.id = d.member_id
 GROUP BY m.id, m.member_code, m.first_name, m.last_name, m.email, m.phone_number, m.membership_status, m.registration_date;
 
 -- Monthly Payment Report View
@@ -220,6 +266,20 @@ LEFT JOIN payments p ON m.id = p.member_id AND p.payment_type_id = pt.id
 WHERE m.membership_status = 'active'
 GROUP BY m.id, m.member_code, m.first_name, m.last_name, pt.id, pt.name, pt.amount, m.membership_status
 HAVING outstanding_amount > 0;
+
+-- Member with Dependants View
+CREATE VIEW IF NOT EXISTS v_member_with_dependants AS
+SELECT 
+    m.id as member_id,
+    m.member_code,
+    m.first_name,
+    m.last_name,
+    COUNT(d.id) as total_dependants,
+    COUNT(CASE WHEN d.is_beneficiary = true THEN 1 END) as beneficiary_count,
+    STRING_AGG(d.relationship, ', ') as dependant_relationships
+FROM members m
+LEFT JOIN dependants d ON m.id = d.member_id
+GROUP BY m.id, m.member_code, m.first_name, m.last_name;
 
 -- Insert default payment types
 INSERT INTO payment_types (name, description, amount, frequency, is_mandatory) VALUES
